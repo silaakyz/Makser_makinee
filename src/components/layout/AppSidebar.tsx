@@ -33,23 +33,9 @@ export function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
+    <Sidebar className="border-r border-sidebar-border bg-gradient-to-b from-[#0A1128] to-[#0D1533]">
       <SidebarContent>
-        <div className="p-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Factory className="w-6 h-6 text-primary-foreground" />
-            </div>
-            {open && (
-              <div>
-                <h2 className="font-bold text-lg text-sidebar-foreground">ÜRETİM</h2>
-                <p className="text-xs text-muted-foreground">Yönetim Sistemi</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <SidebarGroup>
+        <SidebarGroup className="pt-6">
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -59,10 +45,10 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-full mx-3 transition-all ${
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            ? "bg-primary text-primary-foreground font-semibold shadow-glow"
+                            : "text-sidebar-foreground hover:bg-sidebar-border hover:shadow-[0_0_10px_rgba(93,199,243,0.2)]"
                         }`}
                       >
                         <item.icon className="w-5 h-5" />

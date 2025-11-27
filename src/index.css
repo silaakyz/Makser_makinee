@@ -8,25 +8,31 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 220 20% 12%;
-    --foreground: 0 0% 98%;
+    /* Lacivert gradient arka plan */
+    --background: 222 60% 9%;
+    --foreground: 0 0% 100%;
 
-    --card: 220 18% 16%;
-    --card-foreground: 0 0% 98%;
+    /* Beyaz kartlar */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 220 18% 16%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 142 76% 36%;
+    /* Mavi accent renk - #5DC7F3 */
+    --primary: 194 86% 66%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 22%;
-    --secondary-foreground: 0 0% 98%;
+    /* Lacivert secondary */
+    --secondary: 222 47% 18%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 16% 20%;
-    --muted-foreground: 220 8% 65%;
+    /* Açık gri text */
+    --muted: 220 13% 91%;
+    --muted-foreground: 222 20% 45%;
 
-    --accent: 217 91% 60%;
+    /* Mavi accent */
+    --accent: 194 86% 66%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -38,27 +44,33 @@ All colors MUST be HSL.
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --border: 220 16% 24%;
-    --input: 220 16% 24%;
-    --ring: 142 76% 36%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 194 86% 66%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 220 18% 14%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 142 76% 36%;
+    /* Sidebar - Lacivert gradient */
+    --sidebar-background: 222 60% 9%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 194 86% 66%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 16% 20%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 220 16% 22%;
-    --sidebar-ring: 142 76% 36%;
+    --sidebar-accent: 194 86% 66%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 47% 18%;
+    --sidebar-ring: 194 86% 66%;
+
+    /* Topbar - Lacivert gradient */
+    --topbar-background: 222 60% 9%;
+    --topbar-foreground: 0 0% 100%;
 
     /* Animasyonlar */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Gölgeler */
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgba(93, 199, 243, 0.3);
   }
 }
 
@@ -68,6 +80,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-[#0A1128] to-[#122044] text-foreground min-h-screen;
   }
 }
