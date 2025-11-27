@@ -14,8 +14,8 @@ export default function Uretim() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Üretim Yönetimi</h1>
-          <p className="text-muted-foreground">Anlık üretim durumu ve performans metrikleri</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Üretim Yönetimi</h1>
+          <p className="text-white/70">Anlık üretim durumu ve performans metrikleri</p>
         </div>
 
         {/* KPI Cards */}
@@ -51,9 +51,9 @@ export default function Uretim() {
         </div>
 
         {/* Aktif Üretimler */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Aktif Üretimler</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Aktif Üretimler</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -117,9 +117,9 @@ export default function Uretim() {
         </div>
 
         {/* OEE Bileşenleri */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">OEE Bileşenleri</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">OEE Bileşenleri</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

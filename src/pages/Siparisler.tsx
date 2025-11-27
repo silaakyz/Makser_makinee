@@ -17,8 +17,8 @@ export default function Siparisler() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Sipariş Yönetimi</h1>
-          <p className="text-muted-foreground">Sipariş takibi ve durum kontrolü</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Sipariş Yönetimi</h1>
+          <p className="text-white/70">Sipariş takibi ve durum kontrolü</p>
         </div>
 
         {/* KPI Cards */}
@@ -54,9 +54,9 @@ export default function Siparisler() {
         </div>
 
         {/* Bekleyen Siparişler */}
-        <Card className="bg-card border-2 border-warning/30 shadow-[0_0_15px_rgba(251,146,60,0.1)]">
+        <Card className="bg-card border-l-4 border-l-warning shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
               <Clock className="w-5 h-5 text-warning" />
               Bekleyen Siparişler
             </CardTitle>
@@ -94,10 +94,10 @@ export default function Siparisler() {
         </Card>
 
         {/* Üretimdeki Siparişler */}
-        <Card className="bg-card border-2 border-accent/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+        <Card className="bg-card border-l-4 border-l-primary shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
-              <Loader className="w-5 h-5 text-accent" />
+            <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+              <Loader className="w-5 h-5 text-primary" />
               Üretimdeki Siparişler
             </CardTitle>
           </CardHeader>
@@ -136,9 +136,9 @@ export default function Siparisler() {
         </Card>
 
         {/* Tamamlanan Siparişler */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-success" />
               Tamamlanan Siparişler
             </CardTitle>

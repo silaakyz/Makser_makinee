@@ -14,8 +14,8 @@ export default function Uyarilar() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Uyarılar & Bildirimler</h1>
-          <p className="text-muted-foreground">Sistem uyarıları ve önemli bildirimler</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Uyarılar & Bildirimler</h1>
+          <p className="text-white/70">Sistem uyarıları ve önemli bildirimler</p>
         </div>
 
         {/* KPI Cards */}
@@ -52,9 +52,9 @@ export default function Uyarilar() {
 
         {/* Kritik Uyarılar */}
         {kritikUyarilar.length > 0 && (
-          <Card className="bg-card border-2 border-destructive/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+          <Card className="bg-card border-l-4 border-l-destructive shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-destructive" />
                 Kritik Uyarılar
               </CardTitle>
@@ -77,9 +77,9 @@ export default function Uyarilar() {
 
         {/* Orta Seviye Uyarılar */}
         {ortaUyarilar.length > 0 && (
-          <Card className="bg-card border-2 border-warning/30 shadow-[0_0_15px_rgba(251,146,60,0.1)]">
+          <Card className="bg-card border-l-4 border-l-warning shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-warning" />
                 Orta Seviye Uyarılar
               </CardTitle>
@@ -102,10 +102,10 @@ export default function Uyarilar() {
 
         {/* Bilgilendirme */}
         {bilgiUyarilar.length > 0 && (
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
-                <Info className="w-5 h-5 text-accent" />
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <Info className="w-5 h-5 text-primary" />
                 Bilgilendirme
               </CardTitle>
             </CardHeader>

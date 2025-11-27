@@ -16,8 +16,8 @@ export default function Makine() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Makine Yönetimi</h1>
-          <p className="text-muted-foreground">Makine durumu, bakım ve arıza takibi</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Makine Yönetimi</h1>
+          <p className="text-white/70">Makine durumu, bakım ve arıza takibi</p>
         </div>
 
         {/* KPI Cards */}
@@ -53,33 +53,33 @@ export default function Makine() {
         </div>
 
         {/* Makine Durum Kartları */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Makine Durumları</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Makine Durumları</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {mockMachines.map((makine) => (
                 <Card 
                   key={makine.id}
-                  className="bg-card/50 border-2 border-border hover:border-primary/50 transition-all"
+                  className="bg-card border-2 border-border hover:border-primary/50 transition-all"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
-                      <Settings className="w-8 h-8 text-muted-foreground" />
+                      <Settings className="w-8 h-8 text-primary" />
                       <StatusBadge status={makine.durum} />
                     </div>
-                    <h4 className="font-semibold text-foreground mb-1">{makine.ad}</h4>
+                    <h4 className="font-semibold text-card-foreground mb-1">{makine.ad}</h4>
                     <p className="text-sm text-muted-foreground mb-2">{makine.tur}</p>
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Kapasite:</span>
-                        <span className="text-foreground font-medium">{makine.uretim_kapasitesi}/saat</span>
+                        <span className="text-card-foreground font-medium">{makine.uretim_kapasitesi}/saat</span>
                       </div>
                       {makine.sonraki_bakim_tarihi && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Sonraki Bakım:</span>
-                          <span className="text-foreground font-medium">{makine.sonraki_bakim_tarihi}</span>
+                          <span className="text-card-foreground font-medium">{makine.sonraki_bakim_tarihi}</span>
                         </div>
                       )}
                     </div>
@@ -91,9 +91,9 @@ export default function Makine() {
         </Card>
 
         {/* Yaklaşan Bakımlar */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Yaklaşan Bakımlar</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Yaklaşan Bakımlar</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -124,9 +124,9 @@ export default function Makine() {
         </Card>
 
         {/* Arıza Geçmişi */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Arıza Geçmişi (Son 30 Gün)</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Arıza Geçmişi (Son 30 Gün)</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>

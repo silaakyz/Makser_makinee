@@ -20,8 +20,8 @@ export default function Finansal() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Finansal Özet</h1>
-          <p className="text-muted-foreground">Maliyet analizi ve kârlılık raporları</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Finansal Özet</h1>
+          <p className="text-white/70">Maliyet analizi ve kârlılık raporları</p>
         </div>
 
         {/* KPI Cards */}
@@ -58,13 +58,13 @@ export default function Finansal() {
 
         {/* Maliyet Dağılımı */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">Hammadde Maliyeti</CardTitle>
+              <CardTitle className="text-lg font-semibold text-card-foreground">Hammadde Maliyeti</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-3xl font-bold text-card-foreground">
                   ₺{(mockFinansal.hammaddeMaliyeti / 1000).toFixed(0)}K
                 </div>
                 <div className="flex items-center gap-2">
@@ -84,13 +84,13 @@ export default function Finansal() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">Bakım Maliyeti</CardTitle>
+              <CardTitle className="text-lg font-semibold text-card-foreground">Bakım Maliyeti</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-3xl font-bold text-card-foreground">
                   ₺{(mockFinansal.bakimMaliyeti / 1000).toFixed(0)}K
                 </div>
                 <div className="flex items-center gap-2">
@@ -110,13 +110,13 @@ export default function Finansal() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-foreground">Arıza Maliyeti</CardTitle>
+              <CardTitle className="text-lg font-semibold text-card-foreground">Arıza Maliyeti</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-3xl font-bold text-card-foreground">
                   ₺{(mockFinansal.arizaMaliyeti / 1000).toFixed(0)}K
                 </div>
                 <div className="flex items-center gap-2">
@@ -138,9 +138,9 @@ export default function Finansal() {
         </div>
 
         {/* Ürün Bazlı Kârlılık */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Ürün Bazlı Kârlılık Analizi</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Ürün Bazlı Kârlılık Analizi</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>

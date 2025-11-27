@@ -12,11 +12,11 @@ interface KpiCardProps {
 }
 
 const variantStyles = {
-  default: "border-primary/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]",
-  success: "border-success/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]",
-  warning: "border-warning/30 shadow-[0_0_15px_rgba(251,146,60,0.15)]",
-  destructive: "border-destructive/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]",
-  info: "border-accent/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]",
+  default: "border-l-4 border-l-primary shadow-card hover:shadow-hover",
+  success: "border-l-4 border-l-success shadow-card hover:shadow-hover",
+  warning: "border-l-4 border-l-warning shadow-card hover:shadow-hover",
+  destructive: "border-l-4 border-l-destructive shadow-card hover:shadow-hover",
+  info: "border-l-4 border-l-primary shadow-card hover:shadow-hover",
 };
 
 const iconVariantStyles = {
@@ -24,7 +24,7 @@ const iconVariantStyles = {
   success: "bg-success/10 text-success",
   warning: "bg-warning/10 text-warning",
   destructive: "bg-destructive/10 text-destructive",
-  info: "bg-accent/10 text-accent",
+  info: "bg-primary/10 text-primary",
 };
 
 export function KpiCard({ 
@@ -38,7 +38,7 @@ export function KpiCard({
   return (
     <Card 
       className={cn(
-        "p-6 bg-card border-2 transition-all hover:shadow-[0_0_25px_rgba(34,197,94,0.2)]",
+        "p-6 bg-card transition-all",
         variantStyles[variant],
         className
       )}
@@ -46,13 +46,13 @@ export function KpiCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground mb-2">{title}</p>
-          <h3 className="text-3xl font-bold text-foreground mb-1">{value}</h3>
+          <h3 className="text-3xl font-bold text-card-foreground mb-1">{value}</h3>
           {subtitle && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
         <div className={cn(
-          "w-12 h-12 rounded-lg flex items-center justify-center",
+          "w-12 h-12 rounded-xl flex items-center justify-center",
           iconVariantStyles[variant]
         )}>
           <Icon className="w-6 h-6" />

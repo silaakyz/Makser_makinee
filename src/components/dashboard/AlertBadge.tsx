@@ -34,7 +34,7 @@ export function AlertBadge({ type, title, message, timestamp, className }: Alert
 
   return (
     <div className={cn(
-      "p-4 rounded-lg border-2 transition-all hover:shadow-lg",
+      "p-4 rounded-xl border-l-4 transition-all hover:shadow-md bg-card",
       config.className,
       className
     )}>
@@ -42,12 +42,12 @@ export function AlertBadge({ type, title, message, timestamp, className }: Alert
         <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0", config.iconClassName)} />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className="font-semibold text-sm">{title}</h4>
-            <Badge variant="outline" className="text-xs flex-shrink-0">
+            <h4 className="font-semibold text-sm text-card-foreground">{title}</h4>
+            <Badge variant="outline" className="text-xs flex-shrink-0 border-muted">
               {timestamp}
             </Badge>
           </div>
-          <p className="text-sm opacity-90">{message}</p>
+          <p className="text-sm text-card-foreground/80">{message}</p>
         </div>
       </div>
     </div>

@@ -17,8 +17,8 @@ export default function Stoklar() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Stok Yönetimi</h1>
-          <p className="text-muted-foreground">Hammadde ve ürün stok durumu</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Stok Yönetimi</h1>
+          <p className="text-white/70">Hammadde ve ürün stok durumu</p>
         </div>
 
         {/* KPI Cards */}
@@ -55,9 +55,9 @@ export default function Stoklar() {
 
         {/* Kritik Hammadde Stokları */}
         {kritikHammaddeler.length > 0 && (
-          <Card className="bg-card border-2 border-destructive/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+          <Card className="bg-card border-l-4 border-l-destructive shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-destructive" />
                 Kritik Seviyedeki Hammaddeler
               </CardTitle>
@@ -96,9 +96,9 @@ export default function Stoklar() {
         )}
 
         {/* Tüm Hammadde Stokları */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Hammadde Stok Seviyeleri</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Hammadde Stok Seviyeleri</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -142,9 +142,9 @@ export default function Stoklar() {
         </Card>
 
         {/* Ürün Stokları */}
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">Ürün Stok Durumu</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Ürün Stok Durumu</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>

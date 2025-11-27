@@ -1,199 +1,369 @@
-import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { MetricCard } from "@/components/dashboard/MetricCard";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { NavLink } from "@/components/NavLink";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Factory,
+  TrendingUp,
+  Activity,
+  AlertCircle,
   Package,
   ShoppingCart,
+  DollarSign,
+  Bell,
+  Settings,
+  Boxes,
+  Clock,
+  CheckCircle,
   AlertTriangle,
-  Activity,
-  TrendingUp,
 } from "lucide-react";
-import { StatusBadge } from "@/components/dashboard/StatusBadge";
-
-interface DashboardStats {
-  activeProduction: number;
-  activeMachines: number;
-  criticalStock: number;
-  pendingOrders: number;
-  totalMachines: number;
-  productionRate: number;
-}
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    activeProduction: 0,
-    activeMachines: 0,
-    criticalStock: 0,
-    pendingOrders: 0,
-    totalMachines: 0,
-    productionRate: 0,
+  const { data: activeProductions } = useQuery({
+    queryKey: ["active-productions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("uretim")
+        .select(`
+          *,
+          urun:urun_id (ad),
+          makine:makine_id (ad)
+        `)
+        .eq("durum", "devam_ediyor")
+        .order("baslangic_zamani", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data;
+    },
   });
 
-  const [recentProductions, setRecentProductions] = useState<any[]>([]);
-  const [machineStatus, setMachineStatus] = useState<any[]>([]);
+  const { data: machineStatus } = useQuery({
+    queryKey: ["machine-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("makine")
+        .select("durum")
+        .limit(100);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+      if (error) throw error;
 
-  const loadDashboardData = async () => {
-    // Aktif üretimler
-    const { data: activeProductions } = await supabase
-      .from("uretim")
-      .select("*")
-      .eq("durum", "devam_ediyor");
+      const statusCounts = data.reduce((acc, machine) => {
+        acc[machine.durum] = (acc[machine.durum] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-    // Makineler
-    const { data: machines } = await supabase.from("makine").select("*");
-    const activeMachines = machines?.filter((m) => m.durum === "aktif").length || 0;
+      return statusCounts;
+    },
+  });
 
-    // Kritik stok
-    const { data: products } = await supabase.from("urun").select("*");
-    const criticalStock =
-      products?.filter((p) => p.stok_miktari <= p.kritik_stok_seviyesi).length || 0;
+  const { data: criticalStock } = useQuery({
+    queryKey: ["critical-stock"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("hammadde")
+        .select("*")
+        .limit(100);
 
-    // Bekleyen siparişler
-    const { data: orders } = await supabase
-      .from("siparis")
-      .select("*")
-      .eq("durum", "beklemede");
+      if (error) throw error;
 
-    // Son üretimler
-    const { data: productions } = await supabase
-      .from("uretim")
-      .select(`*, urun(ad), makine(ad)`)
-      .order("created_at", { ascending: false })
-      .limit(5);
+      const critical = data.filter(
+        (h) => h.stok_miktari <= (h.kritik_stok_seviyesi || 0)
+      );
 
-    setStats({
-      activeProduction: activeProductions?.length || 0,
-      activeMachines: activeMachines,
-      criticalStock: criticalStock,
-      pendingOrders: orders?.length || 0,
-      totalMachines: machines?.length || 0,
-      productionRate: 85,
-    });
+      return critical.length;
+    },
+  });
 
-    setRecentProductions(productions || []);
-    setMachineStatus(machines || []);
-  };
+  const { data: pendingOrders } = useQuery({
+    queryKey: ["pending-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("siparis")
+        .select("*")
+        .eq("durum", "beklemede")
+        .limit(100);
+
+      if (error) throw error;
+      return data?.length || 0;
+    },
+  });
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Üretim yönetim sistemi genel görünümü</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-white/70">Üretim yönetim sistemi ana görünümü</p>
         </div>
 
-        {/* Metrik Kartları */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
+        {/* Ana KPI Kartları */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard
             title="Üretim Verimliliği"
-            value={`${stats.productionRate}%`}
+            value="87%"
             icon={TrendingUp}
             variant="success"
-            trend={{ value: 5, isPositive: true }}
+            subtitle="Günlük hedef: 85%"
           />
-          <MetricCard
+          <KpiCard
             title="Aktif Üretimler"
-            value={stats.activeProduction}
+            value={activeProductions?.length || 0}
             icon={Factory}
-            variant="default"
+            variant="info"
+            subtitle="Devam eden işler"
           />
-          <MetricCard
+          <KpiCard
             title="Çalışan Makineler"
-            value={`${stats.activeMachines}/${stats.totalMachines}`}
+            value={machineStatus?.aktif || 0}
             icon={Activity}
             variant="default"
+            subtitle={`${machineStatus?.arızalı || 0} arızalı`}
           />
-          <MetricCard
+          <KpiCard
             title="Kritik Stok"
-            value={stats.criticalStock}
-            icon={AlertTriangle}
-            variant={stats.criticalStock > 0 ? "warning" : "success"}
-          />
-          <MetricCard
-            title="Bekleyen Siparişler"
-            value={stats.pendingOrders}
-            icon={ShoppingCart}
-            variant={stats.pendingOrders > 10 ? "warning" : "default"}
-          />
-          <MetricCard
-            title="Ürün Stok Durumu"
-            value="İyi"
-            icon={Package}
-            variant="success"
+            value={criticalStock || 0}
+            icon={AlertCircle}
+            variant="destructive"
+            subtitle="Acil sipariş gerekli"
           />
         </div>
 
+        {/* Modül Önizleme Kartları */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Son Üretimler */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-xl">Üretimdeki İşler</CardTitle>
+          {/* Üretim Durumu */}
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <Factory className="w-5 h-5 text-primary" />
+                Üretim Durumu
+              </CardTitle>
+              <NavLink to="/uretim" className="text-sm text-primary hover:underline">
+                Detaylar →
+              </NavLink>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentProductions.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">
-                    Henüz üretim kaydı bulunmuyor
-                  </p>
-                ) : (
-                  recentProductions.map((prod) => (
-                    <div
-                      key={prod.id}
-                      className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {prod.urun?.ad || "Bilinmeyen Ürün"}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {prod.makine?.ad || "Bilinmeyen Makine"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <StatusBadge status={prod.durum} />
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {prod.uretilen_adet}/{prod.hedef_adet} adet
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Makine</TableHead>
+                    <TableHead>Ürün</TableHead>
+                    <TableHead>İlerleme</TableHead>
+                    <TableHead>Durum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeProductions?.slice(0, 3).map((prod: any) => {
+                    const progress = Math.round(
+                      (prod.uretilen_adet / prod.hedef_adet) * 100
+                    );
+                    return (
+                      <TableRow key={prod.id}>
+                        <TableCell className="font-medium">
+                          {prod.makine?.ad || "N/A"}
+                        </TableCell>
+                        <TableCell>{prod.urun?.ad || "N/A"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[80px]">
+                              <div
+                                className="h-full bg-primary transition-all"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {progress}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={prod.durum} />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
           {/* Makine Durumu */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-xl">Makine Bakım Geçmişi</CardTitle>
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" />
+                Makine Durumu
+              </CardTitle>
+              <NavLink to="/makine" className="text-sm text-primary hover:underline">
+                Detaylar →
+              </NavLink>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-primary/10 border-l-4 border-l-primary">
+                  <p className="text-sm text-muted-foreground mb-1">Aktif</p>
+                  <p className="text-2xl font-bold text-card-foreground">
+                    {machineStatus?.aktif || 0}
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-secondary/30 border-l-4 border-l-secondary">
+                  <p className="text-sm text-muted-foreground mb-1">Boşta</p>
+                  <p className="text-2xl font-bold text-card-foreground">
+                    {machineStatus?.boşta || 0}
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-destructive/10 border-l-4 border-l-destructive">
+                  <p className="text-sm text-muted-foreground mb-1">Arızalı</p>
+                  <p className="text-2xl font-bold text-card-foreground">
+                    {machineStatus?.arızalı || 0}
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-warning/10 border-l-4 border-l-warning">
+                  <p className="text-sm text-muted-foreground mb-1">Bakımda</p>
+                  <p className="text-2xl font-bold text-card-foreground">
+                    {machineStatus?.bakımda || 0}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stok Durumu */}
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
+                Stok Durumu
+              </CardTitle>
+              <NavLink to="/stoklar" className="text-sm text-primary hover:underline">
+                Detaylar →
+              </NavLink>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {machineStatus.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">
-                    Henüz makine kaydı bulunmuyor
-                  </p>
-                ) : (
-                  machineStatus.slice(0, 5).map((machine) => (
-                    <div
-                      key={machine.id}
-                      className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">{machine.ad}</p>
-                        <p className="text-sm text-muted-foreground">{machine.tur}</p>
-                      </div>
-                      <StatusBadge status={machine.durum} />
-                    </div>
-                  ))
-                )}
+                <div className="flex items-center justify-between p-4 rounded-xl border-l-4 border-l-destructive bg-destructive/5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Kritik Hammadde</p>
+                    <p className="text-2xl font-bold text-card-foreground">
+                      {criticalStock || 0}
+                    </p>
+                  </div>
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-xl border-l-4 border-l-primary bg-primary/5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Toplam Stok Kalemi</p>
+                    <p className="text-2xl font-bold text-card-foreground">20</p>
+                  </div>
+                  <Boxes className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sipariş Durumu */}
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-primary" />
+                Sipariş Durumu
+              </CardTitle>
+              <NavLink to="/siparisler" className="text-sm text-primary hover:underline">
+                Detaylar →
+              </NavLink>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-xl border-l-4 border-l-warning bg-warning/5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Bekleyen</p>
+                    <p className="text-2xl font-bold text-card-foreground">
+                      {pendingOrders}
+                    </p>
+                  </div>
+                  <Clock className="w-8 h-8 text-warning" />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-xl border-l-4 border-l-success bg-success/5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tamamlanan</p>
+                    <p className="text-2xl font-bold text-card-foreground">48</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-success" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Finansal Özet ve Uyarılar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Finansal Özet */}
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                Finansal Özet
+              </CardTitle>
+              <NavLink to="/finansal" className="text-sm text-primary hover:underline">
+                Detaylar →
+              </NavLink>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Günlük Maliyet</span>
+                  <span className="text-lg font-bold text-card-foreground">₺45.8K</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Haftalık Maliyet</span>
+                  <span className="text-lg font-bold text-card-foreground">₺285K</span>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-sm text-success">Toplam Kâr</span>
+                  <span className="text-lg font-bold text-success">₺124K</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Uyarılar */}
+          <Card className="bg-card border-border hover:border-primary/30 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" />
+                Uyarılar
+              </CardTitle>
+              <NavLink to="/uyarilar" className="text-sm text-primary hover:underline">
+                Tümü →
+              </NavLink>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-destructive/5 border-l-4 border-l-destructive">
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-card-foreground">Makine Arızası</p>
+                    <p className="text-xs text-muted-foreground">Montaj Hattı 1 - Konveyör</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-destructive/5 border-l-4 border-l-destructive">
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-card-foreground">Kritik Stok</p>
+                    <p className="text-xs text-muted-foreground">4 hammadde kritik seviyede</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-warning/5 border-l-4 border-l-warning">
+                  <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-card-foreground">Yaklaşan Bakım</p>
+                    <p className="text-xs text-muted-foreground">3 makine bakım tarihi yaklaşıyor</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
