@@ -1,6 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Topbar } from "./Topbar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,16 +8,14 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <Topbar />
-          <main className="flex-1 p-6 overflow-auto">
-            <div className="hidden mb-4">
-              <SidebarTrigger />
-            </div>
-            {children}
-          </main>
+          <header className="h-16 border-b border-border bg-card flex items-center px-6">
+            <SidebarTrigger className="mr-4" />
+            <div className="flex-1" />
+          </header>
+          <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
     </SidebarProvider>
