@@ -28,14 +28,13 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: 0, name: "Yeni Üretim", path: "/yeni-uretim", icon: Factory }, // Yeni eklenen
-  { id: 1, name: "Üretim Durumu", path: "/production", icon: Factory }, // Yeni eklenen
-  { id: 2, name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { id: 3, name: "Üretim", path: "/uretim", icon: Factory },
-  { id: 4, name: "Makine", path: "/makine", icon: Settings },
-  { id: 5, name: "Stoklar", path: "/stoklar", icon: Package },
-  { id: 6, name: "Siparişler", path: "/siparisler", icon: ShoppingCart },
-  { id: 7, name: "Finansal Özet", path: "/finansal", icon: DollarSign },
+  { id: 0, name: "Yeni Üretim", path: "/yeni-uretim", icon: Factory },
+  { id: 1, name: "Dashboard", path: "/", icon: LayoutDashboard },
+  { id: 2, name: "Üretim", path: "/uretim", icon: Factory },
+  { id: 3, name: "Makine", path: "/makine", icon: Settings },
+  { id: 4, name: "Stoklar", path: "/stoklar", icon: Package },
+  { id: 5, name: "Siparişler", path: "/siparisler", icon: ShoppingCart },
+  { id: 6, name: "Finansal Özet", path: "/finansal", icon: DollarSign },
 ];
 
 export function AppSidebar() {
