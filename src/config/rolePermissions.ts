@@ -25,6 +25,7 @@ export const ROUTE_PERMISSIONS: Record<string, AppRole[]> = {
   '/siparisler': ['sirket_sahibi', 'genel_mudur', 'muhasebe', 'saha_montaj'],
   '/finansal': ['sirket_sahibi', 'genel_mudur', 'muhasebe'],
   '/uyarilar': ['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'teknisyen'],
+  '/personel': ['sirket_sahibi', 'genel_mudur'],
 };
 
 export const ROLE_NAMES: Record<AppRole, string> = {

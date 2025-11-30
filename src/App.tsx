@@ -14,6 +14,7 @@ import Stoklar from "./pages/Stoklar";
 import Siparisler from "./pages/Siparisler";
 import Finansal from "./pages/Finansal";
 import Uyarilar from "./pages/Uyarilar";
+import Personel from "./pages/Personel";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -95,6 +96,15 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'teknisyen']}>
                   <Uyarilar />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/personel" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur']}>
+                  <Personel />
                 </ProtectedRoute>
               } 
             />

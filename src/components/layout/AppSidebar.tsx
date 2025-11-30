@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   DollarSign,
   LayoutDashboard,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ const menuItems: MenuItem[] = [
   { id: 4, name: "Stoklar", path: "/stoklar", icon: Package },
   { id: 5, name: "Siparişler", path: "/siparisler", icon: ShoppingCart },
   { id: 6, name: "Finansal Özet", path: "/finansal", icon: DollarSign },
+  { id: 7, name: "Personel", path: "/personel", icon: Users },
 ];
 
 export function AppSidebar() {
