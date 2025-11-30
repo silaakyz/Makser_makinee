@@ -18,13 +18,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/useAuth";
+import { ROUTE_PERMISSIONS } from "@/config/rolePermissions";
 
-// ✅ Menü öğeleri
 interface MenuItem {
   id: number;
   name: string;
   path: string;
-  icon: any; // Lucide icon tipi
+  icon: any;
 }
 
 const menuItems: MenuItem[] = [
@@ -40,6 +41,14 @@ const menuItems: MenuItem[] = [
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
+  const { roles } = useAuth();
+
+  // Kullanıcının yetkisi olan menü öğelerini filtrele
+  const allowedMenuItems = menuItems.filter((item) => {
+    const allowedRoles = ROUTE_PERMISSIONS[item.path];
+    if (!allowedRoles) return true; // Kısıtlama yoksa göster
+    return roles.some(role => allowedRoles.includes(role));
+  });
 
   return (
     <Sidebar className="border-r border-sidebar-border bg-gradient-to-b from-[#0A1128] to-[#0D1533]">
@@ -47,7 +56,7 @@ export function AppSidebar() {
         <SidebarGroup className="pt-6">
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
+              {allowedMenuItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
                   <SidebarMenuItem key={item.id}>
