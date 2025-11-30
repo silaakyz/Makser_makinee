@@ -326,33 +326,57 @@ export type Database = {
       urun: {
         Row: {
           ad: string
+          agirlik: number | null
+          boy: number | null
           created_at: string | null
+          en: number | null
+          hacim: number | null
           id: string
           kritik_stok_seviyesi: number | null
+          max_basinc: number | null
+          max_sicaklik: number | null
+          resim_url: string | null
           satis_fiyati: number
           stok_miktari: number
           tur: string
           updated_at: string | null
+          yukseklik: number | null
         }
         Insert: {
           ad: string
+          agirlik?: number | null
+          boy?: number | null
           created_at?: string | null
+          en?: number | null
+          hacim?: number | null
           id?: string
           kritik_stok_seviyesi?: number | null
+          max_basinc?: number | null
+          max_sicaklik?: number | null
+          resim_url?: string | null
           satis_fiyati: number
           stok_miktari?: number
           tur: string
           updated_at?: string | null
+          yukseklik?: number | null
         }
         Update: {
           ad?: string
+          agirlik?: number | null
+          boy?: number | null
           created_at?: string | null
+          en?: number | null
+          hacim?: number | null
           id?: string
           kritik_stok_seviyesi?: number | null
+          max_basinc?: number | null
+          max_sicaklik?: number | null
+          resim_url?: string | null
           satis_fiyati?: number
           stok_miktari?: number
           tur?: string
           updated_at?: string | null
+          yukseklik?: number | null
         }
         Relationships: []
       }
