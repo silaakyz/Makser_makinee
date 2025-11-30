@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 import Dashboard from "./pages/Dashboard";
 import Uretim from "./pages/Uretim";
@@ -13,9 +15,10 @@ import Siparisler from "./pages/Siparisler";
 import Finansal from "./pages/Finansal";
 import Uyarilar from "./pages/Uyarilar";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 
 // Yeni üretim modülü import
-import ProductionModule from "./modules/Production/ProductionModule"; // ✅ Yol ve isim düzeltildi
+import ProductionModule from "./modules/Production/ProductionModule";
 
 const queryClient = new QueryClient();
 
@@ -25,22 +28,81 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Mevcut sayfalar */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/uretim" element={<Uretim />} />
-          <Route path="/makine" element={<Makine />} />
-          <Route path="/stoklar" element={<Stoklar />} />
-          <Route path="/siparisler" element={<Siparisler />} />
-          <Route path="/finansal" element={<Finansal />} />
-          <Route path="/uyarilar" element={<Uyarilar />} />
+        <AuthProvider>
+          <Routes>
+            {/* Auth page - public */}
+            <Route path="/auth" element={<Auth />} />
 
-          {/* ✅ Yeni Üretim Modülü Route */}
-          <Route path="/yeni-uretim" element={<ProductionModule />} />
+            {/* Protected routes */}
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            <Route 
+              path="/uretim" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'uretim_personeli']}>
+                  <Uretim />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/yeni-uretim" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'uretim_personeli']}>
+                  <ProductionModule />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/makine" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'teknisyen', 'servis_personeli']}>
+                  <Makine />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/stoklar" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'muhasebe', 'uretim_sefi']}>
+                  <Stoklar />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/siparisler" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'muhasebe', 'saha_montaj']}>
+                  <Siparisler />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/finansal" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'muhasebe']}>
+                  <Finansal />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/uyarilar" 
+              element={
+                <ProtectedRoute allowedRoles={['sirket_sahibi', 'genel_mudur', 'uretim_sefi', 'teknisyen']}>
+                  <Uyarilar />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

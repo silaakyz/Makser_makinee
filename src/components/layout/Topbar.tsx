@@ -1,8 +1,23 @@
-import { Factory } from "lucide-react";
+import { Factory, LogOut, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { mockKPIs } from "@/lib/mockData";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { ROLE_NAMES } from "@/config/rolePermissions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Topbar() {
+  const { user, roles, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const kpiData = [
     {
       title: "Üretim Verimliliği",
@@ -25,6 +40,11 @@ export function Topbar() {
       subtitle: "27 bakım kaydı",
     },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <div className="h-20 bg-gradient-to-r from-[#0A1128] to-[#122044] border-b border-sidebar-border px-6">
@@ -55,6 +75,33 @@ export function Topbar() {
             </Card>
           ))}
         </div>
+
+        {/* User Menu */}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <div className="text-left hidden lg:block">
+                  <p className="text-sm font-medium text-foreground">{user.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {roles.map(r => ROLE_NAMES[r]).join(', ')}
+                  </p>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Çıkış Yap
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );
