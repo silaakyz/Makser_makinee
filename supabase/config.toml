@@ -1,1 +1,4 @@
 project_id = "owxracnbytioxhirltzp"
+
+[functions.migrate-database]
+verify_jwt = false
