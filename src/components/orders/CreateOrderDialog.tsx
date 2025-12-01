@@ -204,24 +204,6 @@ export function CreateOrderDialog() {
       if (updateMaterialError) throw updateMaterialError;
     }
 
-    if (formData.kaynak === "uretim") {
-      const { data: product, error: productError } = await supabase
-        .from("urun")
-        .select("stok_miktari")
-        .eq("id", formData.urun_id)
-        .maybeSingle();
-
-      if (productError) throw productError;
-
-      const newProductStock = Math.max(0, (product?.stok_miktari || 0) - miktar);
-      const { error: updateProductError } = await supabase
-        .from("urun")
-        .update({ stok_miktari: newProductStock })
-        .eq("id", formData.urun_id);
-
-      if (updateProductError) throw updateProductError;
-    }
-
     return {
       success: true,
       message: "Sipariş başarıyla oluşturuldu.",

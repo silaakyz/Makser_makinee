@@ -9,6 +9,40 @@ export const productionService = {
     return mockData.oeeMetrics.slice(-days);
   },
 
+  async getActiveProductions() {
+    const { data, error } = await supabase
+      .from('uretim')
+      .select(
+        `id,
+         baslangic_zamani,
+         bitis_zamani,
+         hedef_adet,
+         uretilen_adet,
+         durum,
+         makine:makine_id(ad),
+         urun:urun_id(ad)`
+      )
+      .eq('durum', 'devam_ediyor')
+      .order('baslangic_zamani', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((row: any) => {
+      const start = row.baslangic_zamani ? new Date(row.baslangic_zamani) : null;
+      const end = row.bitis_zamani ? new Date(row.bitis_zamani) : null;
+      const estimated = end || (start ? new Date(start.getTime() + 4 * 60 * 60 * 1000) : null);
+
+      return {
+        id: row.id,
+        machine: row.makine?.ad || 'Bilinmiyor',
+        status: row.durum,
+        product: row.urun?.ad || 'Bilinmiyor',
+        startTime: start ? start.toLocaleString('tr-TR') : '-',
+        estimatedEnd: estimated ? estimated.toLocaleString('tr-TR') : '-',
+      };
+    });
+  },
+
   async getActiveMachines(): Promise<Machine[]> {
     const { data } = await supabase
       .from('makine')

@@ -13,6 +13,15 @@ import { toast } from "sonner";
 const ProductionModule: React.FC = () => {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [oee, setOee] = useState<OEEMetrics[]>([]);
+  const [activeProductions, setActiveProductions] = useState<Array<{
+    id: string;
+    machine: string;
+    status: string;
+    product: string;
+    startTime: string;
+    estimatedEnd: string;
+    progress: number;
+  }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,8 +29,10 @@ const ProductionModule: React.FC = () => {
       try {
         const machinesData = await machineService.getAll();
         const oeeData = await productionService.getOEEMetrics();
+        const active = await productionService.getActiveProductions();
         setMachines(machinesData);
         setOee(oeeData);
+        setActiveProductions(active);
       } catch (err) {
         console.error(err);
       } finally {
@@ -130,6 +141,47 @@ const ProductionModule: React.FC = () => {
                     <TableCell>{m.lastMaintenance}</TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Aktif Üretim Emri</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Makine</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Ürün</TableHead>
+                  <TableHead>Başlangıç</TableHead>
+                  <TableHead>Tahmini Bitiş</TableHead>
+                  <TableHead>İlerleme</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeProductions.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.machine}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={p.status} />
+                    </TableCell>
+                    <TableCell>{p.product}</TableCell>
+                    <TableCell>{p.startTime}</TableCell>
+                    <TableCell>{p.estimatedEnd}</TableCell>
+                    <TableCell>{p.progress}%</TableCell>
+                  </TableRow>
+                ))}
+                {activeProductions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                      Aktif üretim kaydı bulunmamaktadır
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

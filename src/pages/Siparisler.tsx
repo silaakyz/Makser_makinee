@@ -142,25 +142,23 @@ export default function Siparisler() {
     try {
       setActionLoading(order.id);
 
-      const shouldHandleStockManually = order.kaynak !== "uretim";
+      const { data: product, error: productError } = await supabase
+        .from("urun")
+        .select("stok_miktari")
+        .eq("id", order.urun_id)
+        .maybeSingle();
 
-      if (shouldHandleStockManually) {
-        const { data: product, error: productError } = await supabase
-          .from("urun")
-          .select("stok_miktari")
-          .eq("id", order.urun_id)
-          .maybeSingle();
+      if (productError) throw productError;
+      const newProductStock = Math.max(0, (product?.stok_miktari || 0) - order.miktar);
 
-        if (productError) throw productError;
-        const newProductStock = Math.max(0, (product?.stok_miktari || 0) - order.miktar);
+      const { error: updateProductError } = await supabase
+        .from("urun")
+        .update({ stok_miktari: newProductStock })
+        .eq("id", order.urun_id);
 
-        const { error: updateProductError } = await supabase
-          .from("urun")
-          .update({ stok_miktari: newProductStock })
-          .eq("id", order.urun_id);
+      if (updateProductError) throw updateProductError;
 
-        if (updateProductError) throw updateProductError;
-
+      if (order.kaynak !== "uretim") {
         const { data: recipe, error: recipeError } = await supabase
           .from("urun_hammadde")
           .select("hammadde_id, miktar")
@@ -198,11 +196,7 @@ export default function Siparisler() {
 
       if (orderError) throw orderError;
 
-      toast.success(
-        shouldHandleStockManually
-          ? "Sipariş tamamlandı, stoklar güncellendi"
-          : "Sipariş tamamlandı"
-      );
+      toast.success("Sipariş tamamlandı, stoklar güncellendi");
       fetchSiparisler();
     } catch (error: any) {
       console.error("Sipariş tamamlanırken hata:", error);

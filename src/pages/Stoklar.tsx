@@ -60,11 +60,13 @@ export default function Stoklar() {
   const [hammaddeForm, setHammaddeForm] = useState({
     id: "",
     miktar: "",
+    type: "artis",
   });
 
   const [urunForm, setUrunForm] = useState({
     id: "",
     miktar: "",
+    type: "artis",
   });
 
   const isManager = roles.some(role =>
@@ -112,7 +114,9 @@ export default function Stoklar() {
     try {
       setActionLoading(true);
       const miktar = Number(hammaddeForm.miktar);
-      const yeniStok = selected.stok_miktari + miktar;
+      const yeniStok = hammaddeForm.type === "azalis"
+        ? Math.max(0, selected.stok_miktari - miktar)
+        : selected.stok_miktari + miktar;
 
       const { error } = await supabase
         .from("hammadde")
@@ -123,7 +127,7 @@ export default function Stoklar() {
 
       toast.success("Hammadde stoğu güncellendi");
       setHammaddeDialogOpen(false);
-      setHammaddeForm({ id: "", miktar: "" });
+      setHammaddeForm({ id: "", miktar: "", type: "artis" });
       fetchData();
     } catch (error: any) {
       console.error("Hammadde girişi yapılırken hata:", error);
@@ -148,7 +152,9 @@ export default function Stoklar() {
     try {
       setActionLoading(true);
       const miktar = Number(urunForm.miktar);
-      const yeniStok = selected.stok_miktari + miktar;
+      const yeniStok = urunForm.type === "azalis"
+        ? Math.max(0, selected.stok_miktari - miktar)
+        : selected.stok_miktari + miktar;
 
       const { error } = await supabase
         .from("urun")
@@ -159,7 +165,7 @@ export default function Stoklar() {
 
       toast.success("Ürün stoğu güncellendi");
       setUrunDialogOpen(false);
-      setUrunForm({ id: "", miktar: "" });
+      setUrunForm({ id: "", miktar: "", type: "artis" });
       fetchData();
     } catch (error: any) {
       console.error("Ürün girişi yapılırken hata:", error);
@@ -589,6 +595,21 @@ export default function Stoklar() {
                 min="0"
               />
             </div>
+            <div className="space-y-2">
+              <Label>İşlem Türü</Label>
+              <Select
+                value={hammaddeForm.type}
+                onValueChange={(value) => setHammaddeForm(prev => ({ ...prev, type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="İşlem türü seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="artis">Stoğa Ekle</SelectItem>
+                  <SelectItem value="azalis">Stoktan Düş</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setHammaddeDialogOpen(false)} disabled={actionLoading}>
@@ -635,6 +656,21 @@ export default function Stoklar() {
                 onChange={(e) => setUrunForm(prev => ({ ...prev, miktar: e.target.value }))}
                 min="0"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>İşlem Türü</Label>
+              <Select
+                value={urunForm.type}
+                onValueChange={(value) => setUrunForm(prev => ({ ...prev, type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="İşlem türü seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="artis">Stoğa Ekle</SelectItem>
+                  <SelectItem value="azalis">Stoktan Düş</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
