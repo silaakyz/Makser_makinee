@@ -4,10 +4,11 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, TrendingDown, Wrench, Download } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Wrench, Download, ShieldAlert } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ResponsiveContainer,
   LineChart,
@@ -31,6 +32,8 @@ interface DailyFinancial {
 }
 
 export default function Finansal() {
+  const { roles } = useAuth();
+  const isProductionChief = roles.includes("uretim_sefi");
   const [daily, setDaily] = useState<DailyFinancial[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -134,6 +137,23 @@ export default function Finansal() {
     XLSX.writeFile(wb, fileName);
     toast.success("Finansal rapor başarıyla indirildi!");
   };
+
+  if (isProductionChief) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-full py-24 text-center space-y-4">
+          <ShieldAlert className="w-12 h-12 text-warning" />
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">Yetki Kısıtlaması</h1>
+            <p className="text-white/70 max-w-xl">
+              Finansal özet ve kârlılık bilgilerine yalnızca yetkili roller erişebilir. Üretim şefi rolü için bu
+              sayfa devre dışı bırakıldı.
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { NavLink } from "@/components/NavLink";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Factory,
   TrendingUp,
@@ -23,6 +24,8 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+  const { roles } = useAuth();
+  const isProductionChief = roles.includes("uretim_sefi");
   const { data: activeProductions } = useQuery({
     queryKey: ["active-productions"],
     queryFn: async () => {
@@ -369,52 +372,53 @@ export default function Dashboard() {
         {/* Finansal Özet ve Uyarılar */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Finansal Özet */}
-          <Card className="bg-card border-border hover:border-primary/30 transition-all">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-primary" />
-                Finansal Özet
-              </CardTitle>
-              <NavLink to="/finansal" className="text-sm text-primary hover:underline">
-                Detaylar →
-              </NavLink>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Günlük Maliyet</span>
-                  <span className="text-lg font-bold text-card-foreground">
-                    {financialSummary
-                      ? `₺${financialSummary.dailyCost.toLocaleString("tr-TR", {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : "—"}
-                  </span>
+          {!isProductionChief && (
+            <Card className="bg-card border-border hover:border-primary/30 transition-all">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-primary" />
+                  Finansal Özet
+                </CardTitle>
+                <NavLink to="/finansal" className="text-sm text-primary hover:underline">
+                  Detaylar →
+                </NavLink>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Günlük Maliyet</span>
+                    <span className="text-lg font-bold text-card-foreground">
+                      {financialSummary
+                        ? `₺${financialSummary.dailyCost.toLocaleString("tr-TR", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Haftalık Maliyet</span>
+                    <span className="text-lg font-bold text-card-foreground">
+                      {financialSummary
+                        ? `₺${financialSummary.weeklyCost.toLocaleString("tr-TR", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t">
+                    <span className="text-sm text-success">Toplam Kâr</span>
+                    <span className="text-lg font-bold text-success">
+                      {financialSummary
+                        ? `₺${financialSummary.profit.toLocaleString("tr-TR", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        : "—"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Haftalık Maliyet</span>
-                  <span className="text-lg font-bold text-card-foreground">
-                    {financialSummary
-                      ? `₺${financialSummary.weeklyCost.toLocaleString("tr-TR", {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <span className="text-sm text-success">Toplam Kâr</span>
-                  <span className="text-lg font-bold text-success">
-                    {financialSummary
-                      ? `₺${financialSummary.profit.toLocaleString("tr-TR", {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : "—"}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
+              </CardContent>
+            </Card>
+          )}
           {/* Uyarılar */}
           <Card className="bg-card border-border hover:border-primary/30 transition-all">
             <CardHeader className="flex flex-row items-center justify-between">
