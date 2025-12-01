@@ -301,6 +301,14 @@ export default function Uretim() {
           <p className="text-white/70">Anlık üretim durumu ve performans metrikleri</p>
           </div>
           {isManager && (
+          <Button
+            className="gap-2 self-start bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={handleGenerateDemoData}
+            disabled={generatingData}
+          >
+              <RotateCcw className="w-4 h-4" />
+              {generatingData ? "Veriler oluşturuluyor..." : "Demo üretim verisi oluştur"}
+            </Button>
           )}
         </div>
 
