@@ -4,7 +4,7 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Factory, TrendingUp, Clock, Target, FileDown, RotateCcw } from "lucide-react";
+import { Factory, TrendingUp, Clock, Target, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,6 @@ export default function Uretim() {
   const [selectedProduct, setSelectedProduct] = useState<UrunRow | null>(null);
   const [docFile, setDocFile] = useState<File | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [generatingData, setGeneratingData] = useState(false);
 
   const isManager = roles.some(role =>
     ["sirket_sahibi", "genel_mudur", "uretim_sefi", "muhasebe"].includes(role)
@@ -192,28 +191,6 @@ export default function Uretim() {
     }
   };
 
-  const handleGenerateDemoData = async () => {
-    try {
-      setGeneratingData(true);
-      const { data, error } = await supabase.functions.invoke("generate-production-samples", {
-        body: { days: 14, maxPerDay: 3 },
-      });
-
-      if (error) throw error;
-      if (!data?.success) {
-        throw new Error(data?.error || "Üretim verileri oluşturulamadı");
-      }
-
-      toast.success(`${data.inserted} adet üretim kaydı oluşturuldu`);
-      await fetchProductionData();
-    } catch (error: any) {
-      console.error("Demo verileri oluşturulamadı:", error);
-      toast.error(error.message || "Üretim verileri oluşturulamadı");
-    } finally {
-      setGeneratingData(false);
-    }
-  };
-
   const aktifUretimler = useMemo(
     () => uretimler.filter((u) => u.durum === "devam_ediyor"),
     [uretimler]
@@ -296,20 +273,10 @@ export default function Uretim() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Üretim Yönetimi</h1>
-          <p className="text-white/70">Anlık üretim durumu ve performans metrikleri</p>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Üretim Yönetimi</h1>
+            <p className="text-white/70">Anlık üretim durumu ve performans metrikleri</p>
           </div>
-          {isManager && (
-          <Button
-            className="gap-2 self-start bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={handleGenerateDemoData}
-            disabled={generatingData}
-          >
-              <RotateCcw className="w-4 h-4" />
-              {generatingData ? "Veriler oluşturuluyor..." : "Demo üretim verisi oluştur"}
-            </Button>
-          )}
         </div>
 
         {/* KPI Cards */}

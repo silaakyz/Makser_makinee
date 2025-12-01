@@ -217,7 +217,10 @@ export default function Makine() {
             <h1 className="text-3xl font-bold text-white mb-2">Makine Yönetimi</h1>
             <p className="text-white/70">Makine durumu, bakım ve arıza takibi</p>
           </div>
-          <Button onClick={exportToExcel} className="gap-2">
+          <Button
+            onClick={exportToExcel}
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             <Download className="w-4 h-4" />
             Excel Raporu İndir
           </Button>
@@ -280,10 +283,9 @@ export default function Makine() {
                           {isAdmin && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-6 w-6 p-0"
+                                <Button
+                                  size="sm"
+                                  className="h-6 w-6 p-0 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                                   disabled={updating === makine.id}
                                 >
                                   <Wrench className="w-3 h-3" />
@@ -418,8 +420,8 @@ export default function Makine() {
                       {isAdmin && (
                         <TableCell>
                           <Button
-                            variant="outline"
                             size="sm"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90"
                             onClick={() => updateMakineDurum(makine.id, 'aktif')}
                             disabled={updating === makine.id}
                           >
