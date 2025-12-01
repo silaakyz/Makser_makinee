@@ -42,36 +42,59 @@ export default function Personel() {
     try {
       setLoading(true);
       
-      // Tüm profilleri çek
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+      // Personel tablosundan veri çek
+      const { data: personelData, error: personelError } = await supabase
+        .from('personel')
         .select('*');
 
-      if (profilesError) throw profilesError;
+      if (personelError) {
+        console.error('Personel tablosu hatası:', personelError);
+        toast.error('Personel listesi yüklenemedi: ' + personelError.message);
+        setPersonelList([]);
+        return;
+      }
 
-      // Tüm rolleri çek
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
+      if (!personelData || personelData.length === 0) {
+        setPersonelList([]);
+        return;
+      }
 
-      if (rolesError) throw rolesError;
+      // Personel verilerini dönüştür
+      const combinedData: PersonelData[] = personelData.map((personel: any) => {
+        // Unvan'a göre role eşleştirme
+        let role: AppRole = 'uretim_personeli';
+        const unvan = personel.unvan?.toLowerCase() || '';
+        
+        if (unvan.includes('sahib') || unvan.includes('sahip')) {
+          role = 'sirket_sahibi';
+        } else if (unvan.includes('müdür') || unvan.includes('mudur')) {
+          role = 'genel_mudur';
+        } else if (unvan.includes('muhasebe')) {
+          role = 'muhasebe';
+        } else if (unvan.includes('üretim') || unvan.includes('uretim')) {
+          role = unvan.includes('şef') || unvan.includes('sefi') ? 'uretim_sefi' : 'uretim_personeli';
+        } else if (unvan.includes('teknisyen')) {
+          role = 'teknisyen';
+        } else if (unvan.includes('servis')) {
+          role = 'servis_personeli';
+        } else if (unvan.includes('montaj')) {
+          role = 'saha_montaj';
+        }
 
-      // Profil ve rolleri birleştir
-      const combinedData: PersonelData[] = profiles?.map(profile => {
-        const userRole = roles?.find(r => r.user_id === profile.id);
         return {
-          id: profile.id,
-          ad: profile.ad,
-          soyad: profile.soyad,
-          email: profile.email,
-          role: userRole?.role || 'uretim_personeli' as AppRole
+          id: personel.personel_id || personel.id || crypto.randomUUID(),
+          ad: personel.ad || null,
+          soyad: personel.soyad || null,
+          email: personel.mail || personel.email || null,
+          role: role
         };
-      }) || [];
+      });
 
       setPersonelList(combinedData);
     } catch (error: any) {
       console.error('Personel listesi yüklenirken hata:', error);
-      toast.error('Personel listesi yüklenemedi');
+      toast.error('Personel listesi yüklenemedi: ' + (error.message || 'Bilinmeyen hata'));
+      setPersonelList([]);
     } finally {
       setLoading(false);
     }
@@ -131,8 +154,12 @@ export default function Personel() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Personel Listesi</CardTitle>
-            <CardDescription>Toplam {personelList.length} personel</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Personel Listesi</CardTitle>
+                <CardDescription>Toplam {personelList.length} personel</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (

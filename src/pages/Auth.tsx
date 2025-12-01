@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Factory } from 'lucide-react';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
@@ -23,7 +22,7 @@ export default function Auth() {
     return null;
   }
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -54,9 +53,11 @@ export default function Auth() {
       <Card className="w-full max-w-md border-border/40 bg-card/95 backdrop-blur">
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-center">
-            <div className="p-3 rounded-full bg-primary/10">
-              <Factory className="w-8 h-8 text-primary" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Makser Makina Logo" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl font-bold">Fabrika Yönetim</CardTitle>
