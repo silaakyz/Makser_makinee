@@ -14,7 +14,7 @@ export function CreateOrderDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
-  const [products, setProducts] = useState<Array<{ id: string; ad: string }>>([]);
+  const [products, setProducts] = useState<Array<{ id: string; ad: string; satis_fiyati: number }>>([]);
   const [estimatedDelivery, setEstimatedDelivery] = useState<{
     days: number;
     date: string;
@@ -36,7 +36,7 @@ export function CreateOrderDialog() {
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from("urun")
-        .select("id, ad")
+        .select("id, ad, satis_fiyati")
         .order("ad");
       
       if (error) {
@@ -61,6 +61,31 @@ export function CreateOrderDialog() {
       setEstimatedDelivery(null);
     }
   }, [formData.urun_id, formData.miktar]);
+
+  // Auto-calculate cost when product is selected
+  const handleProductChange = (productId: string) => {
+    const selectedProduct = products.find(p => p.id === productId);
+    const quantity = parseInt(formData.miktar) || 1;
+    const cost = selectedProduct ? selectedProduct.satis_fiyati * quantity : 0;
+    
+    setFormData({ 
+      ...formData, 
+      urun_id: productId,
+      siparis_maliyeti: cost > 0 ? cost.toString() : formData.siparis_maliyeti
+    });
+  };
+
+  // Update cost when quantity changes
+  useEffect(() => {
+    if (formData.urun_id && formData.miktar) {
+      const selectedProduct = products.find(p => p.id === formData.urun_id);
+      if (selectedProduct) {
+        const quantity = parseInt(formData.miktar);
+        const cost = selectedProduct.satis_fiyati * quantity;
+        setFormData(prev => ({ ...prev, siparis_maliyeti: cost.toString() }));
+      }
+    }
+  }, [formData.miktar, formData.urun_id, products]);
 
   const calculateEstimatedDelivery = async () => {
     setCalculating(true);
@@ -172,33 +197,34 @@ export function CreateOrderDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="musteri">Müşteri Adı</Label>
+            <Label htmlFor="musteri" className="text-white">Müşteri Adı</Label>
             <Input
               id="musteri"
               value={formData.musteri}
               onChange={(e) => setFormData({ ...formData, musteri: e.target.value })}
               required
+              className="bg-secondary text-white border-border placeholder:text-white/50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="urun" className="text-foreground">Ürün</Label>
+            <Label htmlFor="urun" className="text-white">Ürün</Label>
             <Select
               value={formData.urun_id}
-              onValueChange={(value) => setFormData({ ...formData, urun_id: value })}
+              onValueChange={handleProductChange}
               required
             >
-              <SelectTrigger className="bg-card text-card-foreground border-border">
-                <SelectValue placeholder="Ürün seçin" className="text-foreground" />
+              <SelectTrigger className="bg-secondary text-white border-border">
+                <SelectValue placeholder="Ürün seçin" className="text-white" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
+              <SelectContent className="bg-secondary border-border z-50">
                 {products.map((product) => (
                   <SelectItem 
                     key={product.id} 
                     value={product.id}
-                    className="text-card-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="text-white hover:bg-primary/20 focus:bg-primary/20 cursor-pointer"
                   >
-                    {product.ad}
+                    {product.ad} - {product.satis_fiyati.toLocaleString('tr-TR')} ₺
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -206,7 +232,7 @@ export function CreateOrderDialog() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="miktar" className="text-foreground">Miktar</Label>
+            <Label htmlFor="miktar" className="text-white">Miktar</Label>
             <Input
               id="miktar"
               type="number"
@@ -214,21 +240,21 @@ export function CreateOrderDialog() {
               value={formData.miktar}
               onChange={(e) => setFormData({ ...formData, miktar: e.target.value })}
               required
-              className="bg-card text-card-foreground border-border"
+              className="bg-secondary text-white border-border placeholder:text-white/50"
             />
           </div>
 
           {calculating && (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <div className="flex items-center gap-2 text-white text-sm">
               <Clock className="w-4 h-4 animate-spin" />
               <span>Teslimat süresi hesaplanıyor...</span>
             </div>
           )}
 
           {estimatedDelivery && (
-            <Alert className={estimatedDelivery.canProduce ? "border-primary/50 bg-primary/5" : "border-destructive/50 bg-destructive/5"}>
-              <Clock className="h-4 w-4" />
-              <AlertDescription className="text-card-foreground">
+            <Alert className={estimatedDelivery.canProduce ? "border-primary/50 bg-primary/10" : "border-destructive/50 bg-destructive/10"}>
+              <Clock className="h-4 w-4 text-white" />
+              <AlertDescription className="text-white">
                 {estimatedDelivery.canProduce ? (
                   <>
                     <strong>Tahmini Teslimat:</strong> {estimatedDelivery.days} gün içinde ({estimatedDelivery.date})
@@ -251,7 +277,7 @@ export function CreateOrderDialog() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="siparis_maliyeti" className="text-foreground">Sipariş Maliyeti (₺)</Label>
+            <Label htmlFor="siparis_maliyeti" className="text-white">Sipariş Maliyeti (₺)</Label>
             <Input
               id="siparis_maliyeti"
               type="number"
@@ -260,34 +286,39 @@ export function CreateOrderDialog() {
               value={formData.siparis_maliyeti}
               onChange={(e) => setFormData({ ...formData, siparis_maliyeti: e.target.value })}
               required
-              className="bg-card text-card-foreground border-border"
+              className="bg-secondary text-white border-border placeholder:text-white/50"
             />
+            {formData.urun_id && formData.miktar && (
+              <p className="text-xs text-white/70">
+                Otomatik hesaplanan tutar
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kaynak" className="text-foreground">Kaynak</Label>
+            <Label htmlFor="kaynak" className="text-white">Kaynak</Label>
             <Select value={formData.kaynak} onValueChange={(value) => setFormData({ ...formData, kaynak: value })}>
-              <SelectTrigger className="bg-card text-card-foreground border-border">
+              <SelectTrigger className="bg-secondary text-white border-border">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="stok" className="text-card-foreground">Stok</SelectItem>
-                <SelectItem value="uretim" className="text-card-foreground">Üretim</SelectItem>
+              <SelectContent className="bg-secondary border-border">
+                <SelectItem value="stok" className="text-white hover:bg-primary/20 focus:bg-primary/20">Stok</SelectItem>
+                <SelectItem value="uretim" className="text-white hover:bg-primary/20 focus:bg-primary/20">Üretim</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="teslim_tarihi" className="text-foreground">Teslim Tarihi</Label>
+            <Label htmlFor="teslim_tarihi" className="text-white">Teslim Tarihi</Label>
             <Input
               id="teslim_tarihi"
               type="date"
               value={formData.teslim_tarihi}
               onChange={(e) => setFormData({ ...formData, teslim_tarihi: e.target.value })}
-              className="bg-card text-card-foreground border-border"
+              className="bg-secondary text-white border-border placeholder:text-white/50"
             />
             {estimatedDelivery && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-white/70">
                 Önerilen: {estimatedDelivery.date}
               </p>
             )}
