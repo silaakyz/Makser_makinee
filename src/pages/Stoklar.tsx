@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { ChartPlaceholder } from "@/components/dashboard/ChartPlaceholder";
@@ -5,22 +6,181 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mockHammaddeler, mockUrunler } from "@/lib/mockData";
-import { Package, AlertCircle, TrendingDown, Boxes, Download } from "lucide-react";
+import { Package, AlertCircle, TrendingDown, Boxes, Download, Plus } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Hammadde {
+  id: string;
+  ad: string;
+  stok_miktari: number;
+  birim: string;
+  birim_fiyat: number;
+  kritik_stok_seviyesi: number;
+  tuketim_hizi: number;
+}
+
+interface Urun {
+  id: string;
+  ad: string;
+  tur: string;
+  stok_miktari: number;
+  satis_fiyati: number;
+  kritik_stok_seviyesi: number;
+}
 
 export default function Stoklar() {
-  const kritikHammaddeler = mockHammaddeler.filter(h => h.stok_miktari <= h.kritik_stok_seviyesi);
-  const kritikUrunler = mockUrunler.filter(u => u.stok_miktari <= u.kritik_stok_seviyesi);
-  const toplamHammaddeStok = mockHammaddeler.reduce((sum, h) => sum + h.stok_miktari, 0);
-  const toplamUrunStok = mockUrunler.reduce((sum, u) => sum + u.stok_miktari, 0);
+  const { roles } = useAuth();
+  const [hammaddeler, setHammaddeler] = useState<Hammadde[]>([]);
+  const [urunler, setUrunler] = useState<Urun[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [hammaddeDialogOpen, setHammaddeDialogOpen] = useState(false);
+  const [urunDialogOpen, setUrunDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const [hammaddeForm, setHammaddeForm] = useState({
+    id: "",
+    miktar: "",
+  });
+
+  const [urunForm, setUrunForm] = useState({
+    id: "",
+    miktar: "",
+  });
+
+  const isManager = roles.some(role =>
+    ["sirket_sahibi", "genel_mudur", "muhasebe", "uretim_sefi"].includes(role)
+  );
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const [{ data: hData, error: hError }, { data: uData, error: uError }] = await Promise.all([
+        supabase.from("hammadde").select("*").order("ad"),
+        supabase.from("urun").select("*").order("ad"),
+      ]);
+
+      if (hError) throw hError;
+      if (uError) throw uError;
+
+      setHammaddeler(hData || []);
+      setUrunler(uData || []);
+    } catch (error: any) {
+      console.error("Stoklar yüklenirken hata:", error);
+      toast.error("Stok verileri yüklenemedi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHammaddeEntry = async () => {
+    if (!hammaddeForm.id || !hammaddeForm.miktar) {
+      toast.error("Tüm alanları doldurun");
+      return;
+    }
+
+    const selected = hammaddeler.find(h => h.id === hammaddeForm.id);
+    if (!selected) {
+      toast.error("Hammadde bulunamadı");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const miktar = Number(hammaddeForm.miktar);
+      const yeniStok = selected.stok_miktari + miktar;
+
+      const { error } = await supabase
+        .from("hammadde")
+        .update({ stok_miktari: yeniStok })
+        .eq("id", selected.id);
+
+      if (error) throw error;
+
+      toast.success("Hammadde stoğu güncellendi");
+      setHammaddeDialogOpen(false);
+      setHammaddeForm({ id: "", miktar: "" });
+      fetchData();
+    } catch (error: any) {
+      console.error("Hammadde girişi yapılırken hata:", error);
+      toast.error("Hammadde girişi yapılamadı: " + (error.message || "Bilinmeyen hata"));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUrunEntry = async () => {
+    if (!urunForm.id || !urunForm.miktar) {
+      toast.error("Tüm alanları doldurun");
+      return;
+    }
+
+    const selected = urunler.find(u => u.id === urunForm.id);
+    if (!selected) {
+      toast.error("Ürün bulunamadı");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const miktar = Number(urunForm.miktar);
+      const yeniStok = selected.stok_miktari + miktar;
+
+      const { error } = await supabase
+        .from("urun")
+        .update({ stok_miktari: yeniStok })
+        .eq("id", selected.id);
+
+      if (error) throw error;
+
+      toast.success("Ürün stoğu güncellendi");
+      setUrunDialogOpen(false);
+      setUrunForm({ id: "", miktar: "" });
+      fetchData();
+    } catch (error: any) {
+      console.error("Ürün girişi yapılırken hata:", error);
+      toast.error("Ürün girişi yapılamadı: " + (error.message || "Bilinmeyen hata"));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const kritikHammaddeler = useMemo(
+    () => hammaddeler.filter(h => h.stok_miktari <= (h.kritik_stok_seviyesi || 0)),
+    [hammaddeler]
+  );
+
+  const kritikUrunler = useMemo(
+    () => urunler.filter(u => u.stok_miktari <= (u.kritik_stok_seviyesi || 0)),
+    [urunler]
+  );
+
+  const toplamHammaddeStok = useMemo(
+    () => hammaddeler.reduce((sum, h) => sum + (h.stok_miktari || 0), 0),
+    [hammaddeler]
+  );
+
+  const toplamUrunStok = useMemo(
+    () => urunler.reduce((sum, u) => sum + (u.stok_miktari || 0), 0),
+    [urunler]
+  );
 
   const exportToExcel = () => {
-    // Hammaddeler için worksheet
-    const hammaddeData = mockHammaddeler.map((h) => {
-      const isDusuk = h.stok_miktari <= h.kritik_stok_seviyesi;
-      const toplamDeger = h.stok_miktari * h.birim_fiyat;
+    const hammaddeData = hammaddeler.map((h) => {
+      const isDusuk = (h.stok_miktari || 0) <= (h.kritik_stok_seviyesi || 0);
+      const toplamDeger = (h.stok_miktari || 0) * (h.birim_fiyat || 0);
       return {
         "Hammadde Adı": h.ad,
         "Stok Miktarı": h.stok_miktari,
@@ -28,15 +188,14 @@ export default function Stoklar() {
         "Kritik Seviye": h.kritik_stok_seviyesi,
         "Birim Fiyat (₺)": h.birim_fiyat,
         "Toplam Değer (₺)": toplamDeger,
-        "Tüketim Hızı": `${h.tuketim_hizi} ${h.birim}/gün`,
+        "Tüketim Hızı": `${h.tuketim_hizi || 0} ${h.birim}/gün`,
         "Durum": isDusuk ? "Kritik" : "Normal",
       };
     });
 
-    // Ürünler için worksheet
-    const urunData = mockUrunler.map((u) => {
-      const isDusuk = u.stok_miktari <= u.kritik_stok_seviyesi;
-      const toplamDeger = u.stok_miktari * u.satis_fiyati;
+    const urunData = urunler.map((u) => {
+      const isDusuk = (u.stok_miktari || 0) <= (u.kritik_stok_seviyesi || 0);
+      const toplamDeger = (u.stok_miktari || 0) * (u.satis_fiyati || 0);
       return {
         "Ürün Adı": u.ad,
         "Ürün Türü": u.tur,
@@ -57,46 +216,58 @@ export default function Stoklar() {
 
     const fileName = `Stok_Raporu_${new Date().toISOString().split("T")[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
-    
     toast.success("Stok raporu başarıyla indirildi!");
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Stok Yönetimi</h1>
-            <p className="text-white/70">Hammadde ve ürün stok durumu</p>
+            <h1 className="text-3xl font-bold text-white mb-1">Stok Yönetimi</h1>
+            <p className="text-white/70">Hammadde ve ürün stok durumunu yönetin</p>
           </div>
-          <Button onClick={exportToExcel} className="gap-2">
-            <Download className="w-4 h-4" />
-            Excel Raporu İndir
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {isManager && (
+              <>
+                <Button className="gap-2" onClick={() => setHammaddeDialogOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                  Hammadde Girişi
+                </Button>
+                <Button className="gap-2" onClick={() => setUrunDialogOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                  Ürün Stok Girişi
+                </Button>
+              </>
+            )}
+            <Button onClick={exportToExcel} variant="outline" className="gap-2">
+              <Download className="w-4 h-4" />
+              Excel Raporu
+            </Button>
+          </div>
         </div>
 
-        {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard
             title="Kritik Stok"
             value={kritikHammaddeler.length + kritikUrunler.length}
             icon={AlertCircle}
             variant="destructive"
-            subtitle="Acil sipariş gerekli"
+            subtitle="Acil müdahale gerekli"
           />
           <KpiCard
-            title="Hammadde Stok"
-            value={mockHammaddeler.length}
+            title="Hammadde Çeşidi"
+            value={hammaddeler.length}
             icon={Package}
             variant="info"
             subtitle={`${toplamHammaddeStok.toLocaleString()} birim`}
           />
           <KpiCard
-            title="Ürün Stok"
-            value={mockUrunler.length}
+            title="Ürün Çeşidi"
+            value={urunler.length}
             icon={Boxes}
             variant="success"
-            subtitle={`${toplamUrunStok} adet`}
+            subtitle={`${toplamUrunStok.toLocaleString()} adet`}
           />
           <KpiCard
             title="Tüketim Hızı"
@@ -107,8 +278,13 @@ export default function Stoklar() {
           />
         </div>
 
-        {/* Kritik Hammadde Stokları */}
-        {kritikHammaddeler.length > 0 && (
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+          </div>
+        )}
+
+        {!loading && kritikHammaddeler.length > 0 && (
           <Card className="bg-card border-l-4 border-l-destructive shadow-md">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-card-foreground flex items-center gap-2">
@@ -137,7 +313,7 @@ export default function Stoklar() {
                       </TableCell>
                       <TableCell>{hammadde.kritik_stok_seviyesi}</TableCell>
                       <TableCell>{hammadde.birim}</TableCell>
-                      <TableCell>{hammadde.tuketim_hizi} {hammadde.birim}/gün</TableCell>
+                      <TableCell>{hammadde.tuketim_hizi || 0} {hammadde.birim}/gün</TableCell>
                       <TableCell>
                         <Badge variant="destructive">Kritik</Badge>
                       </TableCell>
@@ -149,10 +325,16 @@ export default function Stoklar() {
           </Card>
         )}
 
-        {/* Tüm Hammadde Stokları */}
         <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-card-foreground">Hammadde Stok Seviyeleri</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground flex items-center justify-between gap-4">
+              Hammadde Stok Seviyeleri
+              {isManager && (
+                <Button variant="ghost" size="sm" onClick={() => setHammaddeDialogOpen(true)}>
+                  Stok Girişi
+                </Button>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -167,10 +349,10 @@ export default function Stoklar() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockHammaddeler.map((hammadde) => {
-                  const isDusuk = hammadde.stok_miktari <= hammadde.kritik_stok_seviyesi;
-                  const toplamDeger = hammadde.stok_miktari * hammadde.birim_fiyat;
-                  
+                {hammaddeler.map((hammadde) => {
+                  const isDusuk = (hammadde.stok_miktari || 0) <= (hammadde.kritik_stok_seviyesi || 0);
+                  const toplamDeger = (hammadde.stok_miktari || 0) * (hammadde.birim_fiyat || 0);
+
                   return (
                     <TableRow key={hammadde.id}>
                       <TableCell className="font-medium">{hammadde.ad}</TableCell>
@@ -178,7 +360,7 @@ export default function Stoklar() {
                         {hammadde.stok_miktari}
                       </TableCell>
                       <TableCell>{hammadde.birim}</TableCell>
-                      <TableCell>₺{hammadde.birim_fiyat}</TableCell>
+                      <TableCell>₺{(hammadde.birim_fiyat || 0).toLocaleString()}</TableCell>
                       <TableCell>₺{toplamDeger.toLocaleString()}</TableCell>
                       <TableCell>
                         {isDusuk ? (
@@ -190,15 +372,28 @@ export default function Stoklar() {
                     </TableRow>
                   );
                 })}
+                {hammaddeler.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                      Hammadde kaydı bulunamadı
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        {/* Ürün Stokları */}
         <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-card-foreground">Ürün Stok Durumu</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground flex items-center justify-between gap-4">
+              Ürün Stok Durumu
+              {isManager && (
+                <Button variant="ghost" size="sm" onClick={() => setUrunDialogOpen(true)}>
+                  Stok Girişi
+                </Button>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -213,10 +408,10 @@ export default function Stoklar() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockUrunler.map((urun) => {
-                  const isDusuk = urun.stok_miktari <= urun.kritik_stok_seviyesi;
-                  const toplamDeger = urun.stok_miktari * urun.satis_fiyati;
-                  
+                {urunler.map((urun) => {
+                  const isDusuk = (urun.stok_miktari || 0) <= (urun.kritik_stok_seviyesi || 0);
+                  const toplamDeger = (urun.stok_miktari || 0) * (urun.satis_fiyati || 0);
+
                   return (
                     <TableRow key={urun.id}>
                       <TableCell className="font-medium">{urun.ad}</TableCell>
@@ -224,7 +419,7 @@ export default function Stoklar() {
                       <TableCell className={isDusuk ? "text-destructive font-semibold" : ""}>
                         {urun.stok_miktari}
                       </TableCell>
-                      <TableCell>₺{urun.satis_fiyati.toLocaleString()}</TableCell>
+                      <TableCell>₺{(urun.satis_fiyati || 0).toLocaleString()}</TableCell>
                       <TableCell>₺{toplamDeger.toLocaleString()}</TableCell>
                       <TableCell>
                         {isDusuk ? (
@@ -236,25 +431,125 @@ export default function Stoklar() {
                     </TableRow>
                   );
                 })}
+                {urunler.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                      Ürün kaydı bulunamadı
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        {/* Grafikler */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartPlaceholder 
-            title="Hammadde Tüketim Hızı" 
+          <ChartPlaceholder
+            title="Hammadde Tüketim Hızı"
             type="line"
             height="h-80"
           />
-          <ChartPlaceholder 
-            title="Stok Değer Dağılımı" 
+          <ChartPlaceholder
+            title="Stok Değer Dağılımı"
             type="pie"
             height="h-80"
           />
         </div>
       </div>
+
+      <Dialog open={hammaddeDialogOpen} onOpenChange={setHammaddeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hammadde Stok Girişi</DialogTitle>
+            <DialogDescription>Mevcut hammadde stoklarına miktar ekleyin.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Hammadde</Label>
+              <Select
+                value={hammaddeForm.id}
+                onValueChange={(value) => setHammaddeForm(prev => ({ ...prev, id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Hammadde seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hammaddeler.map((h) => (
+                    <SelectItem key={h.id} value={h.id}>
+                      {h.ad} ({h.stok_miktari} {h.birim})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Miktar</Label>
+              <Input
+                type="number"
+                placeholder="Eklenecek miktar"
+                value={hammaddeForm.miktar}
+                onChange={(e) => setHammaddeForm(prev => ({ ...prev, miktar: e.target.value }))}
+                min="0"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHammaddeDialogOpen(false)} disabled={actionLoading}>
+              İptal
+            </Button>
+            <Button onClick={handleHammaddeEntry} disabled={actionLoading}>
+              {actionLoading ? "Kaydediliyor..." : "Stoğa Ekle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={urunDialogOpen} onOpenChange={setUrunDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ürün Stok Girişi</DialogTitle>
+            <DialogDescription>Tamamlanan üretimlerden stoğa giriş yapın.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Ürün</Label>
+              <Select
+                value={urunForm.id}
+                onValueChange={(value) => setUrunForm(prev => ({ ...prev, id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Ürün seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {urunler.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.ad} ({u.stok_miktari} adet)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Miktar</Label>
+              <Input
+                type="number"
+                placeholder="Eklenecek miktar"
+                value={urunForm.miktar}
+                onChange={(e) => setUrunForm(prev => ({ ...prev, miktar: e.target.value }))}
+                min="0"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUrunDialogOpen(false)} disabled={actionLoading}>
+              İptal
+            </Button>
+            <Button onClick={handleUrunEntry} disabled={actionLoading}>
+              {actionLoading ? "Kaydediliyor..." : "Stoğa Ekle"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

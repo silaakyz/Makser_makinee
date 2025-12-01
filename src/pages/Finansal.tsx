@@ -16,8 +16,8 @@ export default function Finansal() {
   const toplamMaliyet = mockFinansal.urunKarliligi.reduce(
     (sum, u) => sum + (u.maliyet * u.miktar), 0
   );
-  const toplamKar = toplamGelir - toplamMaliyet;
-  const karMarji = ((toplamKar / toplamGelir) * 100).toFixed(1);
+  const toplamKar = toplamGelir - toplamMaliyet - mockFinansal.bakimMaliyeti;
+  const karMarji = toplamGelir > 0 ? ((toplamKar / toplamGelir) * 100).toFixed(1) : "0";
 
   const exportToExcel = () => {
     // Maliyet özeti

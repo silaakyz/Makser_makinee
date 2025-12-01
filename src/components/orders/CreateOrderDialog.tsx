@@ -20,6 +20,12 @@ export function CreateOrderDialog() {
     date: string;
     canProduce: boolean;
     insufficientMaterials: any[];
+    details?: {
+      avgCapacity: number;
+      currentWorkload: number;
+      totalHours: number;
+      availableMachines: number;
+    };
   } | null>(null);
   const { hasAnyRole } = useAuth();
 
@@ -104,7 +110,8 @@ export function CreateOrderDialog() {
           days: data.estimatedDays,
           date: data.deliveryDate,
           canProduce: data.canProduce,
-          insufficientMaterials: data.insufficientMaterials || []
+          insufficientMaterials: data.insufficientMaterials || [],
+          details: data.details,
         });
         
         // Auto-fill delivery date if not set
@@ -258,6 +265,13 @@ export function CreateOrderDialog() {
                 {estimatedDelivery.canProduce ? (
                   <>
                     <strong>Tahmini Teslimat:</strong> {estimatedDelivery.days} gün içinde ({estimatedDelivery.date})
+                    {estimatedDelivery.details && (
+                      <p className="mt-2 text-xs text-white/80">
+                        {estimatedDelivery.details.availableMachines} makinenin ortalama kapasitesi{" "}
+                        {Math.round(estimatedDelivery.details.avgCapacity)} adet/saat. Toplam iş yükü yaklaşık{" "}
+                        {estimatedDelivery.details.totalHours.toFixed(1)} saat (~{estimatedDelivery.days} gün).
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>

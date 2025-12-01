@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { ChartPlaceholder } from "@/components/dashboard/ChartPlaceholder";
@@ -5,19 +6,86 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { mockMachines, mockArizalar, mockBakimlar, mockKPIs } from "@/lib/mockData";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Settings, AlertTriangle, Wrench, Activity, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+interface MakineData {
+  id: string;
+  ad: string;
+  tur: string;
+  uretim_kapasitesi: number;
+  durum: 'aktif' | 'boşta' | 'arızalı' | 'bakımda';
+  son_bakim_tarihi: string | null;
+  sonraki_bakim_tarihi: string | null;
+}
 
 export default function Makine() {
-  const aktifMakineler = mockMachines.filter(m => m.durum === "aktif").length;
-  const arizaliMakineler = mockMachines.filter(m => m.durum === "arızalı").length;
-  const bakimdaMakineler = mockMachines.filter(m => m.durum === "bakımda").length;
+  const { roles } = useAuth();
+  const [makineler, setMakineler] = useState<MakineData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
+
+  const isAdmin = roles.includes('sirket_sahibi') || roles.includes('genel_mudur');
+
+  useEffect(() => {
+    fetchMakineler();
+  }, []);
+
+  const fetchMakineler = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('makine')
+        .select('*')
+        .order('ad');
+
+      if (error) throw error;
+      setMakineler(data || []);
+    } catch (error: any) {
+      console.error('Makine verileri yüklenirken hata:', error);
+      toast.error('Makine verileri yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateMakineDurum = async (makineId: string, yeniDurum: 'aktif' | 'boşta' | 'arızalı' | 'bakımda') => {
+    try {
+      setUpdating(makineId);
+      
+      const { error } = await supabase
+        .from('makine')
+        .update({ durum: yeniDurum })
+        .eq('id', makineId);
+
+      if (error) throw error;
+
+      toast.success('Makine durumu güncellendi');
+      fetchMakineler();
+    } catch (error: any) {
+      console.error('Makine durumu güncellenirken hata:', error);
+      toast.error('Makine durumu güncellenemedi: ' + (error.message || 'Bilinmeyen hata'));
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const aktifMakineler = makineler.filter(m => m.durum === "aktif").length;
+  const arizaliMakineler = makineler.filter(m => m.durum === "arızalı").length;
+  const bakimdaMakineler = makineler.filter(m => m.durum === "bakımda").length;
 
   const exportToExcel = () => {
     // Makineler için worksheet
-    const machineData = mockMachines.map((m) => ({
+    const machineData = makineler.map((m) => ({
       "Makine Adı": m.ad,
       "Makine Türü": m.tur,
       "Durum": m.durum,
@@ -81,11 +149,11 @@ export default function Makine() {
             value={aktifMakineler}
             icon={Activity}
             variant="success"
-            subtitle={`${mockMachines.length} toplam makine`}
+            subtitle={`${makineler.length} toplam makine`}
           />
           <KpiCard
             title="Çalışma Oranı"
-            value={`${mockKPIs.makineCalismaOrani}%`}
+            value={makineler.length > 0 ? `${Math.round((aktifMakineler / makineler.length) * 100)}%` : '0%'}
             icon={Settings}
             variant="info"
             subtitle="Ortalama"
@@ -112,35 +180,88 @@ export default function Makine() {
             <CardTitle className="text-xl font-semibold text-card-foreground">Makine Durumları</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {mockMachines.map((makine) => (
-                <Card 
-                  key={makine.id}
-                  className="bg-card border-2 border-border hover:border-primary/50 transition-all"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <Settings className="w-8 h-8 text-primary" />
-                      <StatusBadge status={makine.durum} />
-                    </div>
-                    <h4 className="font-semibold text-card-foreground mb-1">{makine.ad}</h4>
-                    <p className="text-sm text-muted-foreground mb-2">{makine.tur}</p>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Kapasite:</span>
-                        <span className="text-card-foreground font-medium">{makine.uretim_kapasitesi}/saat</span>
-                      </div>
-                      {makine.sonraki_bakim_tarihi && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Sonraki Bakım:</span>
-                          <span className="text-card-foreground font-medium">{makine.sonraki_bakim_tarihi}</span>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {makineler.map((makine) => (
+                  <Card 
+                    key={makine.id}
+                    className="bg-card border-2 border-border hover:border-primary/50 transition-all"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <Settings className="w-8 h-8 text-primary" />
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={makine.durum} />
+                          {isAdmin && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0"
+                                  disabled={updating === makine.id}
+                                >
+                                  <Wrench className="w-3 h-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem 
+                                  onClick={() => updateMakineDurum(makine.id, 'bakımda')}
+                                  disabled={makine.durum === 'bakımda' || updating === makine.id}
+                                >
+                                  Bakıma Al
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => updateMakineDurum(makine.id, 'arızalı')}
+                                  disabled={makine.durum === 'arızalı' || updating === makine.id}
+                                >
+                                  Arızalı İşaretle
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => updateMakineDurum(makine.id, 'aktif')}
+                                  disabled={makine.durum === 'aktif' || updating === makine.id}
+                                >
+                                  Aktif Yap
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => updateMakineDurum(makine.id, 'boşta')}
+                                  disabled={makine.durum === 'boşta' || updating === makine.id}
+                                >
+                                  Boşta Yap
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      </div>
+                      <h4 className="font-semibold text-card-foreground mb-1">{makine.ad}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">{makine.tur}</p>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Kapasite:</span>
+                          <span className="text-card-foreground font-medium">{makine.uretim_kapasitesi}/saat</span>
+                        </div>
+                        {makine.sonraki_bakim_tarihi && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Sonraki Bakım:</span>
+                            <span className="text-card-foreground font-medium">{makine.sonraki_bakim_tarihi}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {makineler.length === 0 && (
+                  <div className="col-span-full text-center text-muted-foreground py-8">
+                    Henüz makine kaydı bulunmamaktadır
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -161,17 +282,26 @@ export default function Makine() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockBakimlar.map((bakim) => (
-                  <TableRow key={bakim.id}>
-                    <TableCell className="font-medium">{bakim.makine}</TableCell>
-                    <TableCell>{bakim.bakim_tarihi}</TableCell>
-                    <TableCell>
-                      <StatusBadge status="bakımda" className="text-xs" />
+                {makineler
+                  .filter(m => m.sonraki_bakim_tarihi)
+                  .map((makine) => (
+                    <TableRow key={makine.id}>
+                      <TableCell className="font-medium">{makine.ad}</TableCell>
+                      <TableCell>{makine.sonraki_bakim_tarihi}</TableCell>
+                      <TableCell>
+                        <StatusBadge status="bakımda" className="text-xs" />
+                      </TableCell>
+                      <TableCell>-</TableCell>
+                      <TableCell className="text-muted-foreground">Planlı bakım</TableCell>
+                    </TableRow>
+                  ))}
+                {makineler.filter(m => m.sonraki_bakim_tarihi).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      Yaklaşan bakım kaydı bulunmamaktadır
                     </TableCell>
-                    <TableCell>₺{bakim.maliyet.toLocaleString()}</TableCell>
-                    <TableCell className="text-muted-foreground">{bakim.aciklama}</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -180,39 +310,51 @@ export default function Makine() {
         {/* Arıza Geçmişi */}
         <Card className="bg-card border-border hover:border-primary/30 transition-all">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-card-foreground">Arıza Geçmişi (Son 30 Gün)</CardTitle>
+            <CardTitle className="text-xl font-semibold text-card-foreground">Arızalı Makineler</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Makine</TableHead>
-                  <TableHead>Başlangıç</TableHead>
-                  <TableHead>Bitiş</TableHead>
-                  <TableHead>Süre (Saat)</TableHead>
-                  <TableHead>Maliyet</TableHead>
-                  <TableHead>Açıklama</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Makine Türü</TableHead>
+                  <TableHead>Kapasite</TableHead>
+                  {isAdmin && <TableHead>İşlemler</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockArizalar.map((ariza) => (
-                  <TableRow key={ariza.id}>
-                    <TableCell className="font-medium">{ariza.makine}</TableCell>
-                    <TableCell>{ariza.baslangic_tarihi}</TableCell>
-                    <TableCell>
-                      {ariza.bitis_tarihi || (
+                {makineler
+                  .filter(m => m.durum === 'arızalı')
+                  .map((makine) => (
+                    <TableRow key={makine.id}>
+                      <TableCell className="font-medium">{makine.ad}</TableCell>
+                      <TableCell>
                         <StatusBadge status="arızalı" className="text-xs" />
+                      </TableCell>
+                      <TableCell>{makine.tur}</TableCell>
+                      <TableCell>{makine.uretim_kapasitesi}/saat</TableCell>
+                      {isAdmin && (
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateMakineDurum(makine.id, 'aktif')}
+                            disabled={updating === makine.id}
+                          >
+                            {updating === makine.id ? 'Güncelleniyor...' : 'Aktif Yap'}
+                          </Button>
+                        </TableCell>
                       )}
+                    </TableRow>
+                  ))}
+                {makineler.filter(m => m.durum === 'arızalı').length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 5 : 4} className="text-center text-muted-foreground py-8">
+                      Arızalı makine bulunmamaktadır
                     </TableCell>
-                    <TableCell>
-                      {ariza.sure_saat ? `${ariza.sure_saat}h` : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {ariza.maliyet ? `₺${ariza.maliyet.toLocaleString()}` : "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{ariza.aciklama}</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
